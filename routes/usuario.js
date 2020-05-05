@@ -12,7 +12,11 @@ var app = express();
  */
 app.get('/', (req, res, next) => {
 
+    const desde = Number(req.query.desde) || 0; // paginación
+
     Usuario.find({}, 'nombre email img role')
+        .limit(5)
+        .skip(desde)
         .exec((error, usuarios) => {
 
             if (error) {
@@ -23,9 +27,21 @@ app.get('/', (req, res, next) => {
                 })
             }
 
-            res.status(200).json({
-                ok: true,
-                usuarios: usuarios
+            Usuario.count({}, (error, conteo) => {
+
+                if (error) {
+                    return res.status(500).json({
+                        ok: false,
+                        mensaje: 'Error al contar el número de usuarios',
+                        errors: error
+                    })
+                }
+
+                res.status(200).json({
+                    ok: true,
+                    usuarios: usuarios,
+                    totalUsuarios: conteo
+                });
             })
         })
 });
